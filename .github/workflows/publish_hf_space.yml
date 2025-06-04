@@ -1,4 +1,4 @@
-name: HuggingFace Space release
+name: HuggingFace Space
 
 on:
   push:
