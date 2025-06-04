@@ -3,9 +3,9 @@
 TITLE = (
     '''
         <center> 
-            <h1>RSS feed finder</h1>
+            <h1>RSS feed reader</h1>
         </center>
     '''
 )
 
-DESCRIPTION = 'Enter a website to crawl for RSS feed URI.'
+DESCRIPTION = 'Enter a website to extract RSS feed entry titles.'

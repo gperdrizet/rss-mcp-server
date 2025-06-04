@@ -1,22 +1,26 @@
 '''Tool functions for MCP server'''
 
-from findfeed import search
+import logging
+import functions.helper_functions as helper_funcs
 
 
-def get_feed(url: str) -> str:
-    '''Finds the RSS feed URI for a website given the website's url.
+def get_content(website_url: str) -> list:
+    '''Gets RSS feed content from a given website.
     
     Args:
-        url: The url for the website to find the RSS feed for
-        
+        website_url: URL of website to extract RSS feed content from
+
     Returns:
-        The website's RSS feed URI as a string
+        List of titles for the 10 most recent entries in the RSS feed.
     '''
 
-    feeds = search(url)
+    logger = logging.getLogger(__name__ + '.get_content')
+    logger.info('Getting feed content for: %s', website_url)
 
-    if len(feeds) > 0:
-        return str(feeds[0].url)
+    feed_uri = helper_funcs.get_feed(website_url)
+    logger.info('get_feed() returned %s', feed_uri)
 
-    else:
-        return f'No feed found for {url}'
+    content = helper_funcs.parse_feed(feed_uri)
+    logger.info('parse_feed() returned %s', content)
+
+    return '\n'.join(content)
