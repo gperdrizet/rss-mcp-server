@@ -1,5 +1,9 @@
 ---
 title: RSS MCP Server
+sdk: gradio
+sdk_version: 5.32.1
+app_file: rss_server.py
+pinned: true
 tags:
 - mcp-server-track
 ---
