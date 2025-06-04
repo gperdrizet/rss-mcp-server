@@ -1,3 +1,4 @@
 feedparser
+findfeed
 gradio
 mcp
