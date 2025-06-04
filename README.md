@@ -1,7 +1,3 @@
-# rss-mcp-server
-
-RSS feed reader Model Context Protocol server.
-
 ---
 title: RSS MCP Server
 sdk: gradio
@@ -11,3 +7,9 @@ pinned: true
 tags:
 - mcp-server-track
 ---
+
+# rss-mcp-server
+
+[![HuggingFace Space](https://github.com/gperdrizet/rss-mcp-server/actions/workflows/publish_hf_space.yml/badge.svg)](https://github.com/gperdrizet/rss-mcp-server/actions/workflows/publish_hf_space.yml)
+
+RSS feed reader Model Context Protocol server.
