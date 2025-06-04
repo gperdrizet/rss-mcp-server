@@ -3,9 +3,9 @@
 TITLE = (
     '''
         <center> 
-            <h1>Letter counter</h1>
+            <h1>RSS feed finder</h1>
         </center>
     '''
 )
 
-DESCRIPTION = 'Enter text and a letter to count how many times the letter appears in the text.'
+DESCRIPTION = 'Enter a website to crawl for RSS feed URI.'

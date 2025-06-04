@@ -11,16 +11,15 @@ with gr.Blocks() as demo:
         gr.HTML(html.TITLE)
 
     gr.Markdown(html.DESCRIPTION)
-    input_word = gr.Textbox('strawberry', label='Text')
-    target_letter = gr.Textbox('r', label='Word')
-    output = gr.Number(label='Letter count')
-    count_button = gr.Button('Count')
+    website_url = gr.Textbox('hackernews.com', label='Website URL')
+    output = gr.Textbox(label='RSS feed URI')
+    submit_button = gr.Button('Submit')
 
-    count_button.click( # pylint: disable=no-member
-        fn=tool_funcs.letter_counter,
-        inputs=[input_word, target_letter],
+    submit_button.click( # pylint: disable=no-member
+        fn=tool_funcs.get_feed,
+        inputs=website_url,
         outputs=output,
-        api_name='letter count'
+        api_name='get_feed'
     )
 
 
