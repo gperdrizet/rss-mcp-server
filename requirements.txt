@@ -2,3 +2,4 @@ feedparser
 findfeed
 gradio
 mcp
+validators

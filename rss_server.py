@@ -21,7 +21,7 @@ logging.basicConfig(
         backupCount=10,
         mode='w'
     )],
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(levelname)s - %(name)s - %(message)s'
 )
 
@@ -34,7 +34,7 @@ with gr.Blocks() as demo:
         gr.HTML(html.TITLE)
 
     gr.Markdown(html.DESCRIPTION)
-    website_url = gr.Textbox('hackernews.com', label='Website URL')
+    website_url = gr.Textbox('hackernews.com', label='Website')
     output = gr.Textbox(label='RSS entry titles', lines=10)
     submit_button = gr.Button('Submit')
 

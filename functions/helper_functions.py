@@ -1,8 +1,33 @@
 '''Helper functions for MCP tools.'''
 
 import logging
+from types import GeneratorType
+
 import feedparser
-from findfeed import search
+from findfeed import search as feed_search
+from googlesearch import search as google_search
+
+def get_url(company_name: str) -> str:
+    '''Finds the website associated with the name of a company or
+    publication.
+
+    Args:
+        company_name: the name of the company, publication or site to find
+        the URL for
+
+    Returns:
+        The URL for the company, publication or website.
+    '''
+
+    logger = logging.getLogger(__name__ + '.get_url')
+
+    query = f'{company_name} official website'
+
+    for url in google_search(query, num_results=5):
+        if 'facebook' not in url and 'linkedin' not in url:
+            return url
+
+    return None
 
 
 def get_feed(website_url: str) -> str:
@@ -16,8 +41,13 @@ def get_feed(website_url: str) -> str:
     '''
 
     logger = logging.getLogger(__name__ + '.get_content')
+    logger.info('Getting feed URI for: %s', website_url)
 
-    feeds = search(website_url)
+    feeds = feed_search(website_url)
+
+    logger.info('Feeds search result is: %s', type(feeds))
+    logger.info('Feeds search results: %s', len(feeds))
+    logger.info('Feeds results: %s', list(feeds))
 
     if len(feeds) > 0:
         return str(feeds[0].url)
