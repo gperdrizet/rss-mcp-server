@@ -1,8 +1,31 @@
 '''Main script to run gradio interface and MCP server.'''
 
+import logging
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
+
 import gradio as gr
 import assets.html as html
 from functions import tools as tool_funcs
+
+# Make sure log directory exists
+Path('logs').mkdir(parents=True, exist_ok=True)
+
+# Set-up logger
+logger = logging.getLogger()
+
+logging.basicConfig(
+    handlers=[RotatingFileHandler(
+        'logs/rss_server.log',
+        maxBytes=100000,
+        backupCount=10,
+        mode='w'
+    )],
+    level=logging.DEBUG,
+    format='%(levelname)s - %(name)s - %(message)s'
+)
+
+logger = logging.getLogger(__name__)
 
 
 with gr.Blocks() as demo:
@@ -11,16 +34,15 @@ with gr.Blocks() as demo:
         gr.HTML(html.TITLE)
 
     gr.Markdown(html.DESCRIPTION)
-    input_word = gr.Textbox('strawberry', label='Text')
-    target_letter = gr.Textbox('r', label='Word')
-    output = gr.Number(label='Letter count')
-    count_button = gr.Button('Count')
+    website_url = gr.Textbox('hackernews.com', label='Website URL')
+    output = gr.Textbox(label='RSS entry titles', lines=10)
+    submit_button = gr.Button('Submit')
 
-    count_button.click( # pylint: disable=no-member
-        fn=tool_funcs.letter_counter,
-        inputs=[input_word, target_letter],
+    submit_button.click( # pylint: disable=no-member
+        fn=tool_funcs.get_content,
+        inputs=website_url,
         outputs=output,
-        api_name='letter count'
+        api_name='Get RSS feed content'
     )
 
 
