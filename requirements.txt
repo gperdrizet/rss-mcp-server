@@ -1,5 +1,5 @@
 feedparser
 findfeed
+googlesearch-python
 gradio
 mcp
-validators
