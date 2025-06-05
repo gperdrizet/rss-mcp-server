@@ -4,3 +4,5 @@ findfeed
 googlesearch-python
 gradio
 mcp
+#modal
+openai
