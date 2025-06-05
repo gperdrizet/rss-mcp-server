@@ -22,6 +22,6 @@ DESCRIPTION = (
 
         For now, we dump the extracted RSS title, link and summary below. Try asking for a 
         feed by website name, website URL, or entering your favorite feed URI directly.
-        Suggestions: http://openai.com/news/rss.xml, hackernews.com, Hugging Face, etc
+        Suggestions: http://openai.com/news/rss.xml, hackernews.com, slashdot, etc
     '''
 )
