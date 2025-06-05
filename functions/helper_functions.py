@@ -230,7 +230,7 @@ def get_text(html: str) -> str:
         
     Returns:
         Cleaned text string'''
-    
+
     if html is None:
         return None
 
