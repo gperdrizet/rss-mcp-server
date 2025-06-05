@@ -1,3 +1,4 @@
+boilerpy3
 feedparser
 findfeed
 googlesearch-python
