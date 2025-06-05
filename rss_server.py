@@ -39,7 +39,7 @@ with gr.Blocks() as demo:
     submit_button = gr.Button('Submit')
 
     submit_button.click( # pylint: disable=no-member
-        fn=tool_funcs.get_content,
+        fn=tool_funcs.get_feed,
         inputs=website_url,
         outputs=output,
         api_name='Get RSS feed content'
