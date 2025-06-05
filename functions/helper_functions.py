@@ -20,6 +20,7 @@ def get_url(company_name: str) -> str:
     '''
 
     logger = logging.getLogger(__name__ + '.get_url')
+    logger.info('Getting website URL for %s', company_name)
 
     query = f'{company_name} official website'
 
@@ -44,10 +45,6 @@ def get_feed(website_url: str) -> str:
     logger.info('Getting feed URI for: %s', website_url)
 
     feeds = feed_search(website_url)
-
-    logger.info('Feeds search result is: %s', type(feeds))
-    logger.info('Feeds search results: %s', len(feeds))
-    logger.info('Feeds results: %s', list(feeds))
 
     if len(feeds) > 0:
         return str(feeds[0].url)

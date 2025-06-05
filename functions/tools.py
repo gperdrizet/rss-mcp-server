@@ -2,11 +2,11 @@
 
 import logging
 from urllib.parse import urlparse
-import validators
 import functions.helper_functions as helper_funcs
 
 FEED_URIS = {}
 RSS_EXTENSIONS = ['xml', 'rss', 'atom']
+COMMON_EXTENSIONS = ['com', 'net', 'org', 'edu', 'gov', 'co', 'us']
 
 
 def get_content(website: str) -> list:
@@ -39,7 +39,7 @@ def get_content(website: str) -> list:
     # If neither of those get it - try feedparse if it looks like a url
     # or else just google it
     else:
-        if validators.url(website):
+        if website.split('.')[-1] in COMMON_EXTENSIONS:
             website_url = website
             logger.info('%s looks like a website URL', website)
 
