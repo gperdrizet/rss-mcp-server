@@ -1,11 +1,70 @@
 '''Helper functions for MCP tools.'''
 
+import re
 import logging
-from types import GeneratorType
+import urllib.request
+from urllib.error import HTTPError, URLError
 
 import feedparser
+from boilerpy3 import extractors
+from boilerpy3.exceptions import HTMLExtractionError
 from findfeed import search as feed_search
 from googlesearch import search as google_search
+
+FEED_URIS = {}
+RSS_EXTENSIONS = ['xml', 'rss', 'atom']
+COMMON_EXTENSIONS = ['com', 'net', 'org', 'edu', 'gov', 'co', 'us']
+
+
+def find_feed_uri(website: str) -> str:
+    '''Attempts to find URI for RSS feed. First checks if string provided in
+    website is a feed URI, it it's not, checks if website is a URL, if so,
+    uses that to find the RSS feed URI. If the provided string is neither,
+    defaults to Google search to find website URL and then uses that to try
+    and find the Feed.
+
+    Args:
+        website: target resource to find RSS feed URI for, can be website URL or
+        name of website
+
+    Returns:
+        RSS feed URI for website
+    '''
+
+    logger = logging.getLogger(__name__ + '.find_feed_uri')
+    logger.info('Finding feed URI for %s', website)
+
+    # Find the feed URI
+    feed_uri = None
+
+    # If the website contains xml, rss or atom, assume it's an RSS URI
+    if any(extension in website.lower() for extension in RSS_EXTENSIONS):
+        feed_uri = website
+        logger.info('%s looks like a feed URI already - using it directly', website)
+
+    # Next, check the cache to see if we already have this feed's URI
+    elif website in FEED_URIS:
+        feed_uri = FEED_URIS[website]
+        logger.info('%s feed URI in cache: %s', website, feed_uri)
+
+    # If neither of those get it - try feedparse if it looks like a url
+    # or else just google it
+    else:
+        if website.split('.')[-1] in COMMON_EXTENSIONS:
+            website_url = website
+            logger.info('%s looks like a website URL', website)
+
+        else:
+            website_url = get_url(website)
+            logger.info('Google result for %s: %s', website, website_url)
+
+        feed_uri = get_feed(website_url)
+        logger.info('get_feed() returned %s', feed_uri)
+
+        FEED_URIS[website] = feed_uri
+
+    return feed_uri
+
 
 def get_url(company_name: str) -> str:
     '''Finds the website associated with the name of a company or
@@ -20,6 +79,7 @@ def get_url(company_name: str) -> str:
     '''
 
     logger = logging.getLogger(__name__ + '.get_url')
+    logger.info('Getting website URL for %s', company_name)
 
     query = f'{company_name} official website'
 
@@ -45,10 +105,6 @@ def get_feed(website_url: str) -> str:
 
     feeds = feed_search(website_url)
 
-    logger.info('Feeds search result is: %s', type(feeds))
-    logger.info('Feeds search results: %s', len(feeds))
-    logger.info('Feeds results: %s', list(feeds))
-
     if len(feeds) > 0:
         return str(feeds[0].url)
 
@@ -69,18 +125,146 @@ def parse_feed(feed_uri: str) -> list:
     logger = logging.getLogger(__name__ + '.parse_feed')
 
     feed = feedparser.parse(feed_uri)
-    logger.info('%s yieled %s entries', feed_uri, len(feed.entries))
+    logger.info('%s yielded %s entries', feed_uri, len(feed.entries))
 
-    titles = []
+    entries = {}
 
-    for entry in feed.entries:
+    for i, entry in enumerate(feed.entries):
 
-        logger.debug('Entry attributes: %s', list(entry.keys()))
+        entry_content = {}
 
-        if 'title' in entry:
-            titles.append(entry.title)
+        if 'title' in entry and 'link' in entry:
 
-        if len(titles) >= 10:
+            entry_content['title'] = entry.title
+            entry_content['link'] = entry.link
+
+            entry_content['updated'] = None
+            entry_content['summary'] = None
+            entry_content['content'] = None
+
+            if 'updated' in entry:
+                entry_content['updated'] = entry.updated
+
+            if 'summary' in entry:
+                summary = get_text(entry.summary)
+                entry_content['summary'] = summary
+
+            if 'content' in entry:
+                entry_content['content'] = entry.content
+
+            html = get_html(entry_content['link'])
+            content = get_text(html)
+
+            entry_content['extracted_content'] = content
+
+        entries[i] = entry_content
+
+        if i == 9:
             break
 
-    return titles
+    logger.info('Entries contains %s elements', len(list(entries.keys())))
+
+    return entries
+
+
+def get_html(url: str) -> str:
+    '''Gets HTML string content from url
+    
+    Args:
+        url: the webpage to extract content from
+
+    Returns:
+        Webpage HTML source as string
+    '''
+
+    header={
+        "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,image/avif," +
+                   "image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"),
+        "Accept-Language": "en-US,en;q=0.9",
+        "Connection": "keep-alive",
+        "Sec-Fetch-Site": "cross-site",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+        "User-Agent": ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36" +
+                       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+    }
+
+    # Create the request with header
+    request_params = urllib.request.Request(
+        url=url,
+        headers=header
+    )
+
+    # Get the html string
+    try:
+        with urllib.request.urlopen(request_params) as response:
+            status_code = response.getcode()
+
+            if status_code == 200:
+                content = response.read()
+                encoding = response.headers.get_content_charset()
+
+                if encoding is None:
+                    encoding = "utf-8"
+
+                content = content.decode(encoding)
+
+    except HTTPError:
+        content = None
+
+    except URLError:
+        content = None
+
+    return content
+
+
+def get_text(html: str) -> str:
+    '''Uses boilerpy3 extractor and regex cribbed from old NLTK clean_html
+    function to try and extract text from HTML as cleanly as possible.
+    
+    Args:
+        html: the HTML string to be cleaned
+        
+    Returns:
+        Cleaned text string'''
+
+    extractor = extractors.ArticleExtractor()
+
+    try:
+        html = extractor.get_content(html)
+
+    except HTMLExtractionError:
+        pass
+
+
+    return clean_html(html)
+
+
+def clean_html(html: str) -> str:
+    '''
+    Remove HTML markup from the given string. 
+
+    Args:
+        html: the HTML string to be cleaned
+
+    Returns:
+        Cleaned string
+    '''
+
+    # First we remove inline JavaScript/CSS:
+    cleaned = re.sub(r"(?is)<(script|style).*?>.*?(</\1>)", "", html.strip())
+
+    # Then we remove html comments. This has to be done before removing regular
+    # tags since comments can contain '>' characters.
+    cleaned = re.sub(r"(?s)<!--(.*?)-->[\n]?", "", cleaned)
+
+    # Next we can remove the remaining tags:
+    cleaned = re.sub(r"(?s)<.*?>", " ", cleaned)
+
+
+    # Finally, we deal with whitespace
+    cleaned = re.sub(r"&nbsp;", " ", cleaned)
+    cleaned = re.sub(r"  ", " ", cleaned)
+    cleaned = re.sub(r"  ", " ", cleaned)
+
+    return cleaned.strip()
