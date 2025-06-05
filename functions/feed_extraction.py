@@ -92,28 +92,29 @@ def parse_feed(feed_uri: str) -> list:
             entry_content['title'] = entry.title
             entry_content['link'] = entry.link
 
-            entry_content['updated'] = None
-            entry_content['summary'] = None
+            # entry_content['updated'] = None
+            # entry_content['summary'] = None
             entry_content['content'] = None
 
-            if 'updated' in entry:
-                entry_content['updated'] = entry.updated
+            # if 'updated' in entry:
+            #     entry_content['updated'] = entry.updated
 
-            if 'summary' in entry:
-                summary = _get_text(entry.summary)
-                entry_content['summary'] = summary
+            # if 'summary' in entry:
+            #     summary = _get_text(entry.summary)
+            #     entry_content['summary'] = summary
 
             if 'content' in entry:
                 entry_content['content'] = entry.content
 
-            html = _get_html(entry_content['link'])
-            content = _get_text(html)
+            if entry_content['content'] is None:
 
-            entry_content['extracted_content'] = content
+                html = _get_html(entry_content['link'])
+                content = _get_text(html)
+                entry_content['content'] = content
 
         entries[i] = entry_content
 
-        if i == 9:
+        if i == 2:
             break
 
     logger.info('Entries contains %s elements', len(list(entries.keys())))
@@ -261,6 +262,9 @@ def _clean_html(html: str) -> str:
     Returns:
         Cleaned string
     '''
+
+    if html is None:
+        return None
 
     # First we remove inline JavaScript/CSS:
     cleaned = re.sub(r"(?is)<(script|style).*?>.*?(</\1>)", "", html.strip())

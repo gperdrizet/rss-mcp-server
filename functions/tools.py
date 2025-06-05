@@ -3,6 +3,7 @@
 import json
 import logging
 import functions.feed_extraction as extraction_funcs
+import functions.summarization as summarization_funcs
 
 
 def get_feed(website: str) -> list:
@@ -30,5 +31,13 @@ def get_feed(website: str) -> list:
 
     content = extraction_funcs.parse_feed(feed_uri)
     logger.info('parse_feed() returned %s entries', len(list(content.keys())))
+
+    for i, item in content.items():
+
+        if item['content'] is not None:
+            summary = summarization_funcs.summarize_content(item['content'])
+            content[i]['summary'] = summary
+
+        content[i].pop('content', None)
 
     return json.dumps(content)
