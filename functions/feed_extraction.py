@@ -55,61 +55,15 @@ def find_feed_uri(website: str) -> str:
             logger.info('%s looks like a website URL', website)
 
         else:
-            website_url = get_url(website)
+            website_url = _get_url(website)
             logger.info('Google result for %s: %s', website, website_url)
 
-        feed_uri = get_feed(website_url)
+        feed_uri = _get_feed(website_url)
         logger.info('get_feed() returned %s', feed_uri)
 
         FEED_URIS[website] = feed_uri
 
     return feed_uri
-
-
-def get_url(company_name: str) -> str:
-    '''Finds the website associated with the name of a company or
-    publication.
-
-    Args:
-        company_name: the name of the company, publication or site to find
-        the URL for
-
-    Returns:
-        The URL for the company, publication or website.
-    '''
-
-    logger = logging.getLogger(__name__ + '.get_url')
-    logger.info('Getting website URL for %s', company_name)
-
-    query = f'{company_name} official website'
-
-    for url in google_search(query, num_results=5):
-        if 'facebook' not in url and 'linkedin' not in url:
-            return url
-
-    return None
-
-
-def get_feed(website_url: str) -> str:
-    '''Finds the RSS feed URI for a website given the website's url.
-    
-    Args:
-        website_url: The url for the website to find the RSS feed for
-        
-    Returns:
-        The website's RSS feed URI as a string
-    '''
-
-    logger = logging.getLogger(__name__ + '.get_content')
-    logger.info('Getting feed URI for: %s', website_url)
-
-    feeds = feed_search(website_url)
-
-    if len(feeds) > 0:
-        return str(feeds[0].url)
-
-    else:
-        return f'No feed found for {website_url}'
 
 
 def parse_feed(feed_uri: str) -> list:
@@ -146,14 +100,14 @@ def parse_feed(feed_uri: str) -> list:
                 entry_content['updated'] = entry.updated
 
             if 'summary' in entry:
-                summary = get_text(entry.summary)
+                summary = _get_text(entry.summary)
                 entry_content['summary'] = summary
 
             if 'content' in entry:
                 entry_content['content'] = entry.content
 
-            html = get_html(entry_content['link'])
-            content = get_text(html)
+            html = _get_html(entry_content['link'])
+            content = _get_text(html)
 
             entry_content['extracted_content'] = content
 
@@ -167,7 +121,53 @@ def parse_feed(feed_uri: str) -> list:
     return entries
 
 
-def get_html(url: str) -> str:
+def _get_url(company_name: str) -> str:
+    '''Finds the website associated with the name of a company or
+    publication.
+
+    Args:
+        company_name: the name of the company, publication or site to find
+        the URL for
+
+    Returns:
+        The URL for the company, publication or website.
+    '''
+
+    logger = logging.getLogger(__name__ + '.get_url')
+    logger.info('Getting website URL for %s', company_name)
+
+    query = f'{company_name} official website'
+
+    for url in google_search(query, num_results=5):
+        if 'facebook' not in url and 'linkedin' not in url:
+            return url
+
+    return None
+
+
+def _get_feed(website_url: str) -> str:
+    '''Finds the RSS feed URI for a website given the website's url.
+    
+    Args:
+        website_url: The url for the website to find the RSS feed for
+        
+    Returns:
+        The website's RSS feed URI as a string
+    '''
+
+    logger = logging.getLogger(__name__ + '.get_content')
+    logger.info('Getting feed URI for: %s', website_url)
+
+    feeds = feed_search(website_url)
+
+    if len(feeds) > 0:
+        return str(feeds[0].url)
+
+    else:
+        return f'No feed found for {website_url}'
+
+
+def _get_html(url: str) -> str:
     '''Gets HTML string content from url
     
     Args:
@@ -221,7 +221,7 @@ def get_html(url: str) -> str:
     return content
 
 
-def get_text(html: str) -> str:
+def _get_text(html: str) -> str:
     '''Uses boilerpy3 extractor and regex cribbed from old NLTK clean_html
     function to try and extract text from HTML as cleanly as possible.
     
@@ -248,10 +248,10 @@ def get_text(html: str) -> str:
     except TypeError:
         pass
 
-    return clean_html(html)
+    return _clean_html(html)
 
 
-def clean_html(html: str) -> str:
+def _clean_html(html: str) -> str:
     '''
     Remove HTML markup from the given string. 
 
