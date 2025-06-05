@@ -209,6 +209,9 @@ def get_html(url: str) -> str:
 
                 content = content.decode(encoding)
 
+            else:
+                content = None
+
     except HTTPError:
         content = None
 
@@ -227,6 +230,9 @@ def get_text(html: str) -> str:
         
     Returns:
         Cleaned text string'''
+    
+    if html is None:
+        return None
 
     extractor = extractors.ArticleExtractor()
 
@@ -236,6 +242,11 @@ def get_text(html: str) -> str:
     except HTMLExtractionError:
         pass
 
+    except AttributeError:
+        pass
+
+    except TypeError:
+        pass
 
     return clean_html(html)
 
