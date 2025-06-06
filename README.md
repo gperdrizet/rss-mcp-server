@@ -12,4 +12,4 @@ tags:
 
 [![HuggingFace Space](https://github.com/gperdrizet/rss-mcp-server/actions/workflows/publish_hf_space.yml/badge.svg)](https://github.com/gperdrizet/rss-mcp-server/actions/workflows/publish_hf_space.yml)
 
-RSS feed reader Model Context Protocol server.
+RSS feed reader Model Context Protocol server: try it on [HuggingFace Spaces](https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server)

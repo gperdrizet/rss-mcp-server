@@ -35,7 +35,7 @@ with gr.Blocks() as demo:
 
     gr.Markdown(html.DESCRIPTION)
     website_url = gr.Textbox('hackernews.com', label='Website')
-    output = gr.Textbox(label='RSS entry titles', lines=10)
+    output = gr.Textbox(label='RSS entries', lines=10)
     submit_button = gr.Button('Submit')
 
     submit_button.click( # pylint: disable=no-member

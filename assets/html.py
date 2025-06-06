@@ -10,7 +10,16 @@ TITLE = (
 
 DESCRIPTION = (
     '''
-        Functions to find, extract and summarize RSS feeds are complete.
+        <p>RSS feed reader MCP server. See 
+        <a href="https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-client">Agentic RSS reader</a>
+        for a demonstration. Check out the 
+        <a href="https://github.com/gperdrizet/MCP-hackathon/tree/main">main project repo on GitHub</a>. 
+        Both Spaces by <a href="https://www.linkedin.com/in/gperdrizet">George Perdrizet</a>.</p>
+
+        <p>This Space is not meant to be used directly, but you can try out the bare tool below.
+        Enter a website name, website URL, or favorite feed URI. The tool will do it's best
+        to find the feed and return titles, links and summaries for the three most recent posts.
+        Suggestions: http://openai.com/news/rss.xml, hackernews.com, slashdot, etc.</p>
 
         <h2>Tools</h2>
 
@@ -19,9 +28,5 @@ DESCRIPTION = (
                 article titles, links and a generated summary of content if avalible</li>
             <li><b>TODO</b> Simple RAG on requested RSS feed content</li>
         </ol>
-
-        For now, we dump the extracted RSS title, link and summary below. Try asking for a 
-        feed by website name, website URL, or entering your favorite feed URI directly.
-        Suggestions: http://openai.com/news/rss.xml, hackernews.com, slashdot, etc
     '''
 )
