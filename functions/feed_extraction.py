@@ -2,6 +2,7 @@
 
 import os
 import re
+import json
 import logging
 import urllib.request
 from urllib.error import HTTPError, URLError
@@ -110,28 +111,38 @@ def parse_feed(feed_uri: str) -> list:
 
         if 'title' in entry and 'link' in entry:
 
-            entry_content['title'] = entry.title
-            entry_content['link'] = entry.link
+            title = entry.title
 
-            # entry_content['updated'] = None
-            # entry_content['summary'] = None
-            entry_content['content'] = None
+            # Check the Redis cache for this entry
+            cache_key = title.lower().replace(' ', '_')
+            cache_hit = False
+            cached_entry = REDIS.get(cache_key)
 
-            # if 'updated' in entry:
-            #     entry_content['updated'] = entry.updated
+            if cached_entry:
+                cache_hit = True
+                entry_content = json.loads(cached_entry)
+                logger.info('Entry in Redis cache: "%s"', title)
 
-            # if 'summary' in entry:
-            #     summary = _get_text(entry.summary)
-            #     entry_content['summary'] = summary
+            # If its not in the Redis cache, parse it from the feed data
+            else:
+                entry_content['title'] = entry.title
+                entry_content['link'] = entry.link
+                entry_content['content'] = None
 
-            if 'content' in entry:
-                entry_content['content'] = entry.content
+                if 'content' in entry:
+                    entry_content['content'] = entry.content
 
-            if entry_content['content'] is None:
+                if entry_content['content'] is None:
 
-                html = _get_html(entry_content['link'])
-                content = _get_text(html)
-                entry_content['content'] = content
+                    html = _get_html(entry_content['link'])
+                    content = _get_text(html)
+                    entry_content['content'] = content
+
+                logger.info('Parsed entry: "%s"', title)
+
+            # Add it to the Redis cache if it wasn't there
+            if cache_hit is False:
+                REDIS.set(cache_key, entry_content)
 
         entries[i] = entry_content
 
