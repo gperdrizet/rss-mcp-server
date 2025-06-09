@@ -2,31 +2,6 @@
 
 import os
 import re
-import logging
-from pathlib import Path
-from logging.handlers import RotatingFileHandler
-
-
-def configure_root_logger() -> None:
-    '''Configures root logger for project-wide logging.'''
-
-    # Make sure log directory exists
-    Path('logs').mkdir(parents=True, exist_ok=True)
-
-    # Clear old logs if present
-    delete_old_logs('logs', 'rss_server')
-
-    # Set up the root logger so we catch logs from
-    logging.basicConfig(
-        handlers=[RotatingFileHandler(
-            'logs/rss_server.log',
-            maxBytes=100000,
-            backupCount=10,
-            mode='w'
-        )],
-        level=logging.INFO,
-        format='%(levelname)s - %(name)s - %(message)s'
-    )
 
 
 def update_log(n: int = 10):
