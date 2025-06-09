@@ -59,7 +59,7 @@ def get_feed(website: str) -> list:
         if item['content'] is not None:
 
             RAG_INGEST_QUEUE.put(item)
-            logger.info('%s sent to RAG ingest', item['title'])
+            logger.info('"%s" sent to RAG ingest', item['title'])
 
             summary = summarization_funcs.summarize_content(
                 item['title'],
@@ -67,7 +67,7 @@ def get_feed(website: str) -> list:
             )
 
             content[i]['summary'] = summary
-            logger.info('Summary of %s generated', item['title'])
+            logger.info('Summary of "%s" generated', item['title'])
 
         content[i].pop('content', None)
 
@@ -96,8 +96,10 @@ def context_search(query: str, article_title: str = None) -> str:
     results = None
 
     results = index.query(
-        [query],
+        data=query,
         top_k=3,
+        include_metadata=True,
+        include_data=True,
         namespace=article_title
     )
 

@@ -40,7 +40,7 @@ with gr.Blocks() as demo:
     gr.HTML(html.DESCRIPTION)
 
     # Log output
-    dialog_output = gr.Textbox(label='Server logs', lines=10, max_lines=100)
+    dialog_output = gr.Textbox(label='Server logs', lines=10, max_lines=10)
     timer = gr.Timer(0.5, active=True)
 
     timer.tick( # pylint: disable=no-member
@@ -51,14 +51,26 @@ with gr.Blocks() as demo:
 
     # Get feed tool
     website_url = gr.Textbox('hackernews.com', label='Website')
-    output = gr.Textbox(label='RSS entries', lines=10)
+    feed_output = gr.Textbox(label='RSS entries', lines=10, max_lines=10)
     submit_button = gr.Button('Submit')
 
     submit_button.click( # pylint: disable=no-member
         fn=tool_funcs.get_feed,
         inputs=website_url,
-        outputs=output,
+        outputs=feed_output,
         api_name='Get RSS feed content'
+    )
+
+    # Vector search tool
+    search_query = gr.Textbox('Does apple offer parental controls?', label='Vector search query')
+    search_output = gr.Textbox(label='Vector search results', lines=10, max_lines=10)
+    submit_button = gr.Button('Submit')
+
+    submit_button.click( # pylint: disable=no-member
+        fn=tool_funcs.context_search,
+        inputs=search_query,
+        outputs=search_output,
+        api_name='Context vector search'
     )
 
 
