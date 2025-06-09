@@ -45,7 +45,8 @@ with gr.Blocks() as demo:
 
     timer.tick( # pylint: disable=no-member
         lambda: gradio_funcs.update_log(), # pylint: disable=unnecessary-lambda
-        outputs=dialog_output
+        outputs=dialog_output,
+        show_api=False
     )
 
     # Get feed tool
