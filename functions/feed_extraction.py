@@ -2,7 +2,6 @@
 
 import os
 import re
-import json
 import logging
 import urllib.request
 from urllib.error import HTTPError, URLError
@@ -19,7 +18,7 @@ RSS_EXTENSIONS = ['xml', 'rss', 'atom']
 COMMON_EXTENSIONS = ['com', 'net', 'org', 'edu', 'gov', 'co', 'us']
 REDIS = Redis(
     url='https://sensible-midge-19304.upstash.io',
-    token=os.environ['UPSTASH_KEY']
+    token=os.environ['UPSTASH_REDIS_KEY']
 )
 
 def find_feed_uri(website: str) -> str:
