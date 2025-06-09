@@ -8,3 +8,4 @@ openai
 semantic-text-splitter
 tokenizers
 upstash-redis
+upstash-vector
