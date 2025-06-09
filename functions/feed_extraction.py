@@ -1,6 +1,8 @@
 '''Helper functions for MCP tools.'''
 
+import os
 import re
+import json
 import logging
 import urllib.request
 from urllib.error import HTTPError, URLError
@@ -10,11 +12,15 @@ from boilerpy3 import extractors
 from boilerpy3.exceptions import HTMLExtractionError
 from findfeed import search as feed_search
 from googlesearch import search as google_search
+from upstash_redis import Redis
 
 FEED_URIS = {}
 RSS_EXTENSIONS = ['xml', 'rss', 'atom']
 COMMON_EXTENSIONS = ['com', 'net', 'org', 'edu', 'gov', 'co', 'us']
-
+REDIS = Redis(
+    url='https://sensible-midge-19304.upstash.io',
+    token=os.environ['UPSTASH_KEY']
+)
 
 def find_feed_uri(website: str) -> str:
     '''Attempts to find URI for RSS feed. First checks if string provided in
@@ -42,14 +48,26 @@ def find_feed_uri(website: str) -> str:
         feed_uri = website
         logger.info('%s looks like a feed URI already - using it directly', website)
 
-    # Next, check the cache to see if we already have this feed's URI
+    # Next, check the cache to see if we already have this feed's URI locally
     elif website in FEED_URIS:
         feed_uri = FEED_URIS[website]
-        logger.info('%s feed URI in cache: %s', website, feed_uri)
+        logger.info('%s feed URI in local cache: %s', website, feed_uri)
 
-    # If neither of those get it - try feedparse if it looks like a url
+    # Then, check to see if the URI is in the Redis cache
+    cache_key = f"{website.lower().replace(' ', '_')}-feed-uri"
+    cache_hit = False
+
+    if feed_uri is None:
+        cached_uri = REDIS.get(cache_key)
+
+        if cached_uri:
+            cache_hit = True
+            feed_uri = cached_uri
+            logger.info('%s feed URI in Redis cache: %s', website, feed_uri)
+
+    # If none of those get it - try feedparse if it looks like a url
     # or else just google it
-    else:
+    if feed_uri is None:
         if website.split('.')[-1] in COMMON_EXTENSIONS:
             website_url = website
             logger.info('%s looks like a website URL', website)
@@ -62,6 +80,10 @@ def find_feed_uri(website: str) -> str:
         logger.info('get_feed() returned %s', feed_uri)
 
         FEED_URIS[website] = feed_uri
+
+    # Add the feed URI to the redis cache if it wasn't already there
+    if cache_hit is False:
+        REDIS.set(cache_key, feed_uri)
 
     return feed_uri
 

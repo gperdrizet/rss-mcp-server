@@ -1,6 +1,7 @@
 '''Main script to run gradio interface and MCP server.'''
 
 import logging
+from functools import partial
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
@@ -17,7 +18,7 @@ Path('logs').mkdir(parents=True, exist_ok=True)
 # Clear old logs if present
 gradio_funcs.delete_old_logs('logs', 'rss_server')
 
-# Set up the root logger so we catch logs from
+# Set up the root logger so we catch logs from everything
 logging.basicConfig(
     handlers=[RotatingFileHandler(
         'logs/rss_server.log',
@@ -29,8 +30,8 @@ logging.basicConfig(
     format='%(levelname)s - %(name)s - %(message)s'
 )
 
+# Get a logger
 logger = logging.getLogger(__name__)
-
 
 with gr.Blocks() as demo:
 
