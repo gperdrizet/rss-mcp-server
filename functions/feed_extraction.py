@@ -1,6 +1,8 @@
 '''Helper functions for MCP tools.'''
 
+import os
 import re
+import json
 import logging
 import urllib.request
 from urllib.error import HTTPError, URLError
@@ -10,11 +12,15 @@ from boilerpy3 import extractors
 from boilerpy3.exceptions import HTMLExtractionError
 from findfeed import search as feed_search
 from googlesearch import search as google_search
+from upstash_redis import Redis
 
 FEED_URIS = {}
 RSS_EXTENSIONS = ['xml', 'rss', 'atom']
 COMMON_EXTENSIONS = ['com', 'net', 'org', 'edu', 'gov', 'co', 'us']
-
+REDIS = Redis(
+    url='https://sensible-midge-19304.upstash.io',
+    token=os.environ['UPSTASH_REDIS_KEY']
+)
 
 def find_feed_uri(website: str) -> str:
     '''Attempts to find URI for RSS feed. First checks if string provided in
@@ -42,14 +48,26 @@ def find_feed_uri(website: str) -> str:
         feed_uri = website
         logger.info('%s looks like a feed URI already - using it directly', website)
 
-    # Next, check the cache to see if we already have this feed's URI
+    # Next, check the cache to see if we already have this feed's URI locally
     elif website in FEED_URIS:
         feed_uri = FEED_URIS[website]
-        logger.info('%s feed URI in cache: %s', website, feed_uri)
+        logger.info('%s feed URI in local cache: %s', website, feed_uri)
 
-    # If neither of those get it - try feedparse if it looks like a url
+    # Then, check to see if the URI is in the Redis cache
+    cache_key = f"{website.lower().replace(' ', '_')}-feed-uri"
+    cache_hit = False
+
+    if feed_uri is None:
+        cached_uri = REDIS.get(cache_key)
+
+        if cached_uri:
+            cache_hit = True
+            feed_uri = cached_uri
+            logger.info('%s feed URI in Redis cache: %s', website, feed_uri)
+
+    # If none of those get it - try feedparse if it looks like a url
     # or else just google it
-    else:
+    if feed_uri is None:
         if website.split('.')[-1] in COMMON_EXTENSIONS:
             website_url = website
             logger.info('%s looks like a website URL', website)
@@ -62,6 +80,10 @@ def find_feed_uri(website: str) -> str:
         logger.info('get_feed() returned %s', feed_uri)
 
         FEED_URIS[website] = feed_uri
+
+    # Add the feed URI to the redis cache if it wasn't already there
+    if cache_hit is False:
+        REDIS.set(cache_key, feed_uri)
 
     return feed_uri
 
@@ -89,28 +111,38 @@ def parse_feed(feed_uri: str) -> list:
 
         if 'title' in entry and 'link' in entry:
 
-            entry_content['title'] = entry.title
-            entry_content['link'] = entry.link
+            title = entry.title
 
-            # entry_content['updated'] = None
-            # entry_content['summary'] = None
-            entry_content['content'] = None
+            # Check the Redis cache for this entry
+            cache_key = title.lower().replace(' ', '_')
+            cache_hit = False
+            cached_entry = REDIS.get(cache_key)
 
-            # if 'updated' in entry:
-            #     entry_content['updated'] = entry.updated
+            if cached_entry:
+                cache_hit = True
+                entry_content = json.loads(cached_entry)
+                logger.info('Entry in Redis cache: "%s"', title)
 
-            # if 'summary' in entry:
-            #     summary = _get_text(entry.summary)
-            #     entry_content['summary'] = summary
+            # If its not in the Redis cache, parse it from the feed data
+            else:
+                entry_content['title'] = entry.title
+                entry_content['link'] = entry.link
+                entry_content['content'] = None
 
-            if 'content' in entry:
-                entry_content['content'] = entry.content
+                if 'content' in entry:
+                    entry_content['content'] = entry.content
 
-            if entry_content['content'] is None:
+                if entry_content['content'] is None:
 
-                html = _get_html(entry_content['link'])
-                content = _get_text(html)
-                entry_content['content'] = content
+                    html = _get_html(entry_content['link'])
+                    content = _get_text(html)
+                    entry_content['content'] = content
+
+                logger.info('Parsed entry: "%s"', title)
+
+            # Add it to the Redis cache if it wasn't there
+            if cache_hit is False:
+                REDIS.set(cache_key, entry_content)
 
         entries[i] = entry_content
 
