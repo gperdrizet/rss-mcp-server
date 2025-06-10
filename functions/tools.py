@@ -8,6 +8,7 @@ import logging
 import queue
 from typing import Tuple
 from upstash_vector import Index
+from upstash_redis import Redis
 
 import functions.feed_extraction as extraction_funcs
 import functions.summarization as summarization_funcs
@@ -166,3 +167,33 @@ def find_article(query: str) -> list[Tuple[float, str]]:
         contexts.append((result.score, result.metadata['namespace']))
 
     return contexts
+
+
+def get_summary(title: str) -> str:
+    '''Uses article title to get summary of article content.
+    
+    Args:
+        title: title of article to get summary for
+
+    Returns:
+        Short summary of article content. Returns "No summary found"
+        if summary does not exist.
+    '''
+
+    logger = logging.getLogger(__name__ + '.get_summary()')
+
+    redis = Redis(
+        url='https://sensible-midge-19304.upstash.io',
+        token=os.environ['UPSTASH_REDIS_KEY']
+    )
+
+    cache_key = f'{title} summary'
+    summary = redis.get(cache_key)
+
+    if summary:
+
+        logger.info('Got summary for "%s": %s', title, summary[:100])
+        return summary
+
+    logger.info('Could not find summary for: "%s"', title)
+    return 'No summary found'

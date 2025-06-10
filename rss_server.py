@@ -55,7 +55,7 @@ with gr.Blocks() as demo:
 
     # Get feed tool
     gr.Markdown('### 1. `get_feed()`')
-    website_url = gr.Textbox('hackernews.com', label='Website')
+    website_url = gr.Textbox('slashdot', label='Website')
     feed_output = gr.Textbox(label='RSS entries', lines=7, max_lines=7)
 
     with gr.Row():
@@ -73,7 +73,7 @@ with gr.Blocks() as demo:
     gr.Markdown('### 2. `context_search()`')
 
     context_search_query = gr.Textbox(
-        'Does apple offer parental controls?',
+        'How is the air traffic control system being updated?',
         label='Context search query'
     )
     context_search_output = gr.Textbox(
@@ -99,7 +99,7 @@ with gr.Blocks() as demo:
     gr.Markdown('### 3. `find_article()`')
 
     article_search_query = gr.Textbox(
-        'Does apple offer parental controls?',
+        'How is the air traffic control system being updated?',
         label='Article search query'
     )
     article_search_output = gr.Textbox(
@@ -119,6 +119,32 @@ with gr.Blocks() as demo:
         inputs=article_search_query,
         outputs=article_search_output,
         api_name='Article vector search'
+    )
+
+    # Get summary tool
+    gr.Markdown('### 4. `get_summary()`')
+
+    article_title = gr.Textbox(
+        'FAA To Eliminate Floppy Disks Used In Air Traffic Control Systems',
+        label='Article title'
+    )
+    article_summary = gr.Textbox(
+        label='Article summary',
+        lines=7,
+        max_lines=7
+    )
+
+    with gr.Row():
+        article_title_submit_button = gr.Button('Submit title')
+        article_title_clear_button = gr.ClearButton(
+            components=[article_title, article_summary]
+        )
+
+    article_title_submit_button.click( # pylint: disable=no-member
+        fn=tool_funcs.get_summary,
+        inputs=article_title,
+        outputs=article_summary,
+        api_name='Article summary search'
     )
 
 

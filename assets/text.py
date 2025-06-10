@@ -27,5 +27,6 @@ DESCRIPTION = ('''
     2. `context_search()`: Vector search on article content for RAG context.
     3. `find_article()`: Uses vector search on article content to find title of article
         that user is referring to.
+    4. `get_summary()`: Gets article summary from Redis cache using article title.
 
 ''')
