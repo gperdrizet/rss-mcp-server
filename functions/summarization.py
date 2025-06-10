@@ -25,7 +25,7 @@ def summarize_content(title: str, content: str) -> str:
     logger.info('Summarizing extracted content')
 
     # Check Redis cache for summary
-    cache_key = f"{title.lower().replace(' ', '_')}-summary"
+    cache_key = f'{title}  summary'
     cached_summary = REDIS.get(cache_key)
 
     if cached_summary:
@@ -77,6 +77,8 @@ def summarize_content(title: str, content: str) -> str:
     else:
         summary = None
 
+    # Add the new summary to the cache
     REDIS.set(cache_key, summary)
     logger.info('Summarized: "%s"', title)
+
     return summary

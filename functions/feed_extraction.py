@@ -2,7 +2,6 @@
 
 import os
 import re
-import json
 import logging
 import urllib.request
 from urllib.error import HTTPError, URLError
@@ -53,8 +52,8 @@ def find_feed_uri(website: str) -> str:
         feed_uri = FEED_URIS[website]
         logger.info('%s feed URI in local cache: %s', website, feed_uri)
 
-    # Then, check to see if the URI is in the Redis cache
-    cache_key = f"{website.lower().replace(' ', '_')}-feed-uri"
+    # If we still haven't found it, check to see if the URI is in the Redis cache
+    cache_key = f'{website} feed uri'
     cache_hit = False
 
     if feed_uri is None:
@@ -65,7 +64,7 @@ def find_feed_uri(website: str) -> str:
             feed_uri = cached_uri
             logger.info('%s feed URI in Redis cache: %s', website, feed_uri)
 
-    # If none of those get it - try feedparse if it looks like a url
+    # If still none of those methods get it - try feedparse if it looks like a url
     # or else just google it
     if feed_uri is None:
         if website.split('.')[-1] in COMMON_EXTENSIONS:
@@ -79,6 +78,7 @@ def find_feed_uri(website: str) -> str:
         feed_uri = _get_feed(website_url)
         logger.info('get_feed() returned %s', feed_uri)
 
+        # Add to local cache
         FEED_URIS[website] = feed_uri
 
     # Add the feed URI to the redis cache if it wasn't already there
@@ -88,14 +88,16 @@ def find_feed_uri(website: str) -> str:
     return feed_uri
 
 
-def parse_feed(feed_uri: str) -> list:
+def parse_feed(feed_uri: str, n: int) -> list:
     '''Gets content from a remote RSS feed URI.
     
     Args:
         feed_uri: The RSS feed to get content from
+        n: the number of feed entries to parse
 
     Returns:
-        List of titles for the 10 most recent entries in the RSS feed.
+        List of dictionaries for the n most recent entries in the RSS feed.
+        Each dictionary contains 'title', 'link' and 'content' keys.
     '''
 
     logger = logging.getLogger(__name__ + '.parse_feed')
@@ -112,16 +114,15 @@ def parse_feed(feed_uri: str) -> list:
         if 'title' in entry and 'link' in entry:
 
             title = entry.title
+            entry_content['title'] = title
 
-            # Check the Redis cache for this entry
-            cache_key = title.lower().replace(' ', '_')
-            cache_hit = False
-            cached_entry = REDIS.get(cache_key)
+            # Check the Redis cache
+            cached_link = REDIS.get(f'{title} link')
 
-            if cached_entry:
-                cache_hit = True
-                entry_content = json.loads(cached_entry)
+            if cached_link:
                 logger.info('Entry in Redis cache: "%s"', title)
+                entry_content['link'] = cached_link
+                entry_content['content'] = REDIS.get(f'{title} content')
 
             # If its not in the Redis cache, parse it from the feed data
             else:
@@ -129,24 +130,26 @@ def parse_feed(feed_uri: str) -> list:
                 entry_content['link'] = entry.link
                 entry_content['content'] = None
 
+                # Grab the article content from the feed, if provided
                 if 'content' in entry:
                     entry_content['content'] = entry.content
 
-                if entry_content['content'] is None:
+                # If not, try to get the article content from the link
+                elif entry_content['content'] is None:
 
                     html = _get_html(entry_content['link'])
                     content = _get_text(html)
                     entry_content['content'] = content
 
-                logger.info('Parsed entry: "%s"', title)
+                # Add everything to the cache
+                REDIS.set(f'{title} link', entry_content['link'])
+                REDIS.set(f'{title} content', entry_content['content'])
 
-            # Add it to the Redis cache if it wasn't there
-            if cache_hit is False:
-                REDIS.set(cache_key, entry_content)
+                logger.info('Parsed entry: "%s"', title)
 
         entries[i] = entry_content
 
-        if i == 2:
+        if i == n-1:
             break
 
     logger.info('Entries contains %s elements', len(list(entries.keys())))

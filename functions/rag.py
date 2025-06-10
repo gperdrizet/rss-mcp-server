@@ -24,7 +24,7 @@ def ingest(rag_ingest_queue: queue.Queue) -> None:
         namespaces = index.list_namespaces()
 
         item = rag_ingest_queue.get()
-        logger.info(item)
+        logger.info('Upserting "%s": %s', item['title'], item)
         title = item['title']
 
         if title not in namespaces:
@@ -36,15 +36,6 @@ def ingest(rag_ingest_queue: queue.Queue) -> None:
             chunks=splitter.chunks(text)
 
             for i, chunk in enumerate(chunks):
-                # index.upsert(
-                #     vectors=[
-                #         Vector(
-                #             id=hash(f'{title}-{i}'),
-                #             data=chunk,
-                #         )
-                #     ],
-                #     namespace=title
-                # )
 
                 index.upsert(
                     [

@@ -6,7 +6,7 @@ import time
 import json
 import logging
 import queue
-from upstash_vector import Index, Vector
+from upstash_vector import Index
 
 import functions.feed_extraction as extraction_funcs
 import functions.summarization as summarization_funcs
@@ -22,14 +22,17 @@ rag_ingest_thread = threading.Thread(
 rag_ingest_thread.start()
 
 
-def get_feed(website: str) -> list:
+def get_feed(website: str, n: int = 3) -> list:
     '''Gets RSS feed content from a given website. Can take a website or RSS
     feed URL directly, or the name of a website. Will attempt to find RSS
     feed and return title, summary and link to full article for most recent
-    items in feed.
+    n items in feed. This function is slow a resource heavy, only call it when
+    the user wants to check a feed for new content, or asks for content from a
+    feed that you have not retrieved yet.
     
     Args:
         website: URL or name of website to extract RSS feed content from
+        n: (optional) number of articles to parse from feed, defaults to 3
 
     Returns:
         JSON string containing the feed content or 'No feed found' if a RSS
@@ -50,43 +53,56 @@ def get_feed(website: str) -> list:
         return 'No feed found'
 
     # Parse and extract content from the feed
-    content = extraction_funcs.parse_feed(feed_uri)
-    logger.info('parse_feed() returned %s entries', len(list(content.keys())))
+    articles = extraction_funcs.parse_feed(feed_uri, n)
+    logger.info('parse_feed() returned %s entries', len(list(articles.keys())))
 
-    # Summarize each post in the feed and submit full text for RAG ingest
-    for i, item in content.items():
+    # Loop on the posts, sending them to RAG (nonblocking) and summarization (blocking)
+    for i, item in articles.items():
 
+        # Check if content is present
         if item['content'] is not None:
+            logger.info('Summarizing/RAG ingesting: %s', item)
 
-            RAG_INGEST_QUEUE.put(item)
+            # Send to RAG ingest
+            RAG_INGEST_QUEUE.put(item.copy())
             logger.info('"%s" sent to RAG ingest', item['title'])
 
+            # Generate summary and add to content
             summary = summarization_funcs.summarize_content(
                 item['title'],
                 item['content']
             )
 
-            content[i]['summary'] = summary
+            articles[i]['summary'] = summary
             logger.info('Summary of "%s" generated', item['title'])
 
-        content[i].pop('content', None)
+        # Remove full-text content before returning
+        articles[i].pop('content', None)
 
     logger.info('Completed in %s seconds', round(time.time()-start_time, 2))
 
-    return json.dumps(content)
+    # Return content dictionary as string
+    return json.dumps(articles)
 
 
 def context_search(query: str, article_title: str = None) -> str:
-    '''Searches for context relevant to query in article vector store.
+    '''Searches for context relevant to query in article vector store. 
+    Use this Function to search for additional information before 
+    answering the user's question about an article. If article_title is
+    provided the search will only return results from that article. If
+    article_title is omitted, the search will include all articles
+    currently in the cache. 
     
     Ags:
         query: user query to find context for
-        article_title: optional, use this argument to search only for context
-            from a specific context
+        article_title: optional, use this argument to search only for 
+        context from a specific context, defaults to None
             
     Returns:
-        Context which bests matches query as string.
+        Context information which bests matches the query.
     '''
+
+    logger = logging.getLogger(__name__ + 'context_search')
 
     index = Index(
         url='https://living-whale-89944-us1-vector.upstash.io',
@@ -102,5 +118,7 @@ def context_search(query: str, article_title: str = None) -> str:
         include_data=True,
         namespace=article_title
     )
+
+    logger.info('Retrieved %s chunks for "%s"', len(results), query)
 
     return results

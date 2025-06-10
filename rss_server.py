@@ -1,6 +1,5 @@
 '''Main script to run gradio interface and MCP server.'''
 
-import asyncio
 import logging
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
@@ -10,8 +9,9 @@ import assets.html as html
 import functions.tools as tool_funcs
 import functions.gradio_functions as gradio_funcs
 
-# Call the modal container so it spins up
-asyncio.run(gradio_funcs.call_modal())
+# Call the modal container so it spins up before the rest of
+# the app starts
+gradio_funcs.call_modal()
 
 # Set-up logging
 # Make sure log directory exists

@@ -6,7 +6,7 @@ import logging
 
 from openai import OpenAI
 
-async def call_modal() -> None:
+def call_modal() -> None:
     '''Sends request to Modal to spin up container'''
 
     logger = logging.getLogger(__name__ + '.call_modal()')
@@ -30,7 +30,7 @@ async def call_modal() -> None:
         }
     ]
 
-    logger.info('Prompt: %s': messages[0]['content'])
+    logger.info('Prompt: %s', messages[0]['content'])
 
     completion_args = {
         'model': model_id,
