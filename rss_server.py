@@ -71,18 +71,54 @@ with gr.Blocks() as demo:
 
     # Vector search tool
     gr.Markdown('### 2. `context_search()`')
-    search_query = gr.Textbox('Does apple offer parental controls?', label='Vector search query')
-    search_output = gr.Textbox(label='Vector search results', lines=7, max_lines=7)
+
+    context_search_query = gr.Textbox(
+        'Does apple offer parental controls?',
+        label='Context search query'
+    )
+    context_search_output = gr.Textbox(
+        label='Context search results',
+        lines=7,
+        max_lines=7
+    )
 
     with gr.Row():
-        search_submit_button = gr.Button('Submit query')
-        search_clear_button = gr.ClearButton(components=[search_query, search_output])
+        context_search_submit_button = gr.Button('Submit query')
+        context_search_clear_button = gr.ClearButton(
+            components=[context_search_query, context_search_output]
+        )
 
-    search_submit_button.click( # pylint: disable=no-member
+    context_search_submit_button.click( # pylint: disable=no-member
         fn=tool_funcs.context_search,
-        inputs=search_query,
-        outputs=search_output,
+        inputs=context_search_query,
+        outputs=context_search_output,
         api_name='Context vector search'
+    )
+
+    # Find article tool
+    gr.Markdown('### 3. `find_article()`')
+
+    article_search_query = gr.Textbox(
+        'Does apple offer parental controls?',
+        label='Article search query'
+    )
+    article_search_output = gr.Textbox(
+        label='Article search results',
+        lines=7,
+        max_lines=7
+    )
+
+    with gr.Row():
+        article_search_submit_button = gr.Button('Submit query')
+        article_search_clear_button = gr.ClearButton(
+            components=[article_search_query, article_search_output]
+        )
+
+    article_search_submit_button.click( # pylint: disable=no-member
+        fn=tool_funcs.find_article,
+        inputs=article_search_query,
+        outputs=article_search_output,
+        api_name='Article vector search'
     )
 
 

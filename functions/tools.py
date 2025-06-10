@@ -6,6 +6,7 @@ import time
 import json
 import logging
 import queue
+from typing import Tuple
 from upstash_vector import Index
 
 import functions.feed_extraction as extraction_funcs
@@ -85,7 +86,7 @@ def get_feed(website: str, n: int = 3) -> list:
     return json.dumps(articles)
 
 
-def context_search(query: str, article_title: str = None) -> str:
+def context_search(query: str, article_title: str = None) -> list[Tuple[float, str]]:
     '''Searches for context relevant to query in article vector store. 
     Use this Function to search for additional information before 
     answering the user's question about an article. If article_title is
@@ -99,7 +100,46 @@ def context_search(query: str, article_title: str = None) -> str:
         context from a specific context, defaults to None
             
     Returns:
-        Context information which bests matches the query.
+        List of tuples with the following format: [(relevance score, 'context string')]
+    '''
+
+    logger = logging.getLogger(__name__ + 'context_search')
+
+    index = Index(
+        url='https://living-whale-89944-us1-vector.upstash.io',
+        token=os.environ['UPSTASH_VECTOR_KEY']
+    )
+
+    results = None
+
+    results = index.query(
+        data=query,
+        top_k=3,
+        include_data=True,
+        namespace=article_title
+    )
+
+    logger.info('Retrieved %s chunks for "%s"', len(results), query)
+
+    contexts = []
+
+    for result in results:
+        contexts.append((result.score, result.data))
+
+    return contexts
+
+
+def find_article(query: str) -> list[Tuple[float, str]]:
+    '''Uses vector search to find the most likely title of the article 
+    referred to by query. Use this function if the user is asking about
+    and article, but it is unclear which article.
+    
+    Args:
+        query: query to to find source article for
+        
+    Returns:
+        List of tuples of most likely context article titles in the following format:
+        [(relevance score, 'article title')]
     '''
 
     logger = logging.getLogger(__name__ + 'context_search')
@@ -115,10 +155,14 @@ def context_search(query: str, article_title: str = None) -> str:
         data=query,
         top_k=3,
         include_metadata=True,
-        include_data=True,
-        namespace=article_title
+        include_data=True
     )
 
     logger.info('Retrieved %s chunks for "%s"', len(results), query)
 
-    return results
+    contexts = []
+
+    for result in results:
+        contexts.append((result.score, result.metadata['namespace']))
+
+    return contexts
