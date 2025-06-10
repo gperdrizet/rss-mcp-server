@@ -5,7 +5,7 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
 import gradio as gr
-import assets.html as html
+import assets.text as text
 import functions.tools as tool_funcs
 import functions.gradio_functions as gradio_funcs
 
@@ -38,12 +38,12 @@ logger = logging.getLogger(__name__)
 with gr.Blocks() as demo:
 
     # Page text
-    gr.HTML(html.TITLE)
-    gr.HTML(html.DESCRIPTION)
+    gr.HTML(text.TITLE)
+    gr.Markdown(text.DESCRIPTION)
 
     # Log output
     with gr.Row():
-        dialog_output = gr.Textbox(label='Server logs', lines=5, max_lines=5)
+        dialog_output = gr.Textbox(label='Server logs', lines=7, max_lines=5)
 
     timer = gr.Timer(0.5, active=True)
 
@@ -54,11 +54,15 @@ with gr.Blocks() as demo:
     )
 
     # Get feed tool
+    gr.Markdown('### 1. `get_feed()`')
     website_url = gr.Textbox('hackernews.com', label='Website')
-    feed_output = gr.Textbox(label='RSS entries', lines=10, max_lines=10)
-    submit_button = gr.Button('Submit')
+    feed_output = gr.Textbox(label='RSS entries', lines=7, max_lines=7)
 
-    submit_button.click( # pylint: disable=no-member
+    with gr.Row():
+        website_submit_button = gr.Button('Submit website')
+        website_clear_button = gr.ClearButton(components=[website_url, feed_output])
+
+    website_submit_button.click( # pylint: disable=no-member
         fn=tool_funcs.get_feed,
         inputs=website_url,
         outputs=feed_output,
@@ -66,11 +70,15 @@ with gr.Blocks() as demo:
     )
 
     # Vector search tool
+    gr.Markdown('### 2. `context_search()`')
     search_query = gr.Textbox('Does apple offer parental controls?', label='Vector search query')
-    search_output = gr.Textbox(label='Vector search results', lines=10, max_lines=10)
-    submit_button = gr.Button('Submit')
+    search_output = gr.Textbox(label='Vector search results', lines=7, max_lines=7)
 
-    submit_button.click( # pylint: disable=no-member
+    with gr.Row():
+        search_submit_button = gr.Button('Submit query')
+        search_clear_button = gr.ClearButton(components=[search_query, search_output])
+
+    search_submit_button.click( # pylint: disable=no-member
         fn=tool_funcs.context_search,
         inputs=search_query,
         outputs=search_output,
