@@ -13,8 +13,7 @@ import functions.gradio_functions as gradio_funcs
 # the app starts
 gradio_funcs.call_modal()
 
-# Set-up logging
-# Make sure log directory exists
+# Set-up logging - make sure log directory exists
 Path('logs').mkdir(parents=True, exist_ok=True)
 
 # Clear old logs if present
