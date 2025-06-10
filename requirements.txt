@@ -5,4 +5,7 @@ googlesearch-python
 gradio
 mcp
 openai
+semantic-text-splitter
+tokenizers
 upstash-redis
+upstash-vector
