@@ -41,6 +41,7 @@ with gr.Blocks() as demo:
     gr.HTML(text.TITLE)
     gr.Markdown(text.DESCRIPTION)
 
+
     # Log output
     with gr.Row():
         dialog_output = gr.Textbox(label='Server logs', lines=7, max_lines=5)
@@ -52,6 +53,7 @@ with gr.Blocks() as demo:
         outputs=dialog_output,
         show_api=False
     )
+
 
     # Get feed tool
     gr.Markdown('### 1. `get_feed()`')
@@ -68,6 +70,7 @@ with gr.Blocks() as demo:
         outputs=feed_output,
         api_name='Get RSS feed content'
     )
+
 
     # Vector search tool
     gr.Markdown('### 2. `context_search()`')
@@ -95,6 +98,7 @@ with gr.Blocks() as demo:
         api_name='Context vector search'
     )
 
+
     # Find article tool
     gr.Markdown('### 3. `find_article()`')
 
@@ -104,8 +108,8 @@ with gr.Blocks() as demo:
     )
     article_search_output = gr.Textbox(
         label='Article search results',
-        lines=7,
-        max_lines=7
+        lines=3,
+        max_lines=3
     )
 
     with gr.Row():
@@ -121,6 +125,7 @@ with gr.Blocks() as demo:
         api_name='Article vector search'
     )
 
+
     # Get summary tool
     gr.Markdown('### 4. `get_summary()`')
 
@@ -130,8 +135,8 @@ with gr.Blocks() as demo:
     )
     article_summary = gr.Textbox(
         label='Article summary',
-        lines=7,
-        max_lines=7
+        lines=3,
+        max_lines=3
     )
 
     with gr.Row():
@@ -145,6 +150,33 @@ with gr.Blocks() as demo:
         inputs=article_title,
         outputs=article_summary,
         api_name='Article summary search'
+    )
+
+
+    # Get link tool
+    gr.Markdown('### 5. `get_link()`')
+
+    article_title_link = gr.Textbox(
+        'FAA To Eliminate Floppy Disks Used In Air Traffic Control Systems',
+        label='Article title'
+    )
+    article_link = gr.Textbox(
+        label='Article link',
+        lines=3,
+        max_lines=3
+    )
+
+    with gr.Row():
+        article_link_submit_button = gr.Button('Submit title')
+        article_link_clear_button = gr.ClearButton(
+            components=[article_title_link, article_link]
+        )
+
+    article_link_submit_button.click( # pylint: disable=no-member
+        fn=tool_funcs.get_link,
+        inputs=article_title_link,
+        outputs=article_link,
+        api_name='Article link search'
     )
 
 

@@ -28,5 +28,5 @@ DESCRIPTION = ('''
     3. `find_article()`: Uses vector search on article content to find title of article
         that user is referring to.
     4. `get_summary()`: Gets article summary from Redis cache using article title.
-
+    5. `get_link()`: Gets article link from Redis cache using article title.
 ''')

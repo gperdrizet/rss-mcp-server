@@ -197,3 +197,32 @@ def get_summary(title: str) -> str:
 
     logger.info('Could not find summary for: "%s"', title)
     return 'No summary found'
+
+
+def get_link(title: str) -> str:
+    '''Uses article title to get link to content webpage.
+    
+    Args:
+        title: title of article to get link for
+
+    Returns:
+        Article webpage URL. Returns "No link found" if link does not exist.
+    '''
+
+    logger = logging.getLogger(__name__ + '.get_link()')
+
+    redis = Redis(
+        url='https://sensible-midge-19304.upstash.io',
+        token=os.environ['UPSTASH_REDIS_KEY']
+    )
+
+    cache_key = f'{title} link'
+    link = redis.get(cache_key)
+
+    if link:
+
+        logger.info('Got link for "%s": %s', title, link)
+        return link
+
+    logger.info('Could not find link for: "%s"', title)
+    return 'No summary found'
