@@ -28,7 +28,7 @@ def get_feed(website: str, n: int = 3) -> list:
     '''Gets RSS feed content from a given website. Can take a website or RSS
     feed URL directly, or the name of a website. Will attempt to find RSS
     feed and return title, summary and link to full article for most recent
-    n items in feed. This function is slow a resource heavy, only call it when
+    n items in feed. This function is slow and resource heavy, only call it when
     the user wants to check a feed for new content, or asks for content from a
     feed that you have not retrieved yet.
     
@@ -88,20 +88,19 @@ def get_feed(website: str, n: int = 3) -> list:
 
 
 def context_search(query: str, article_title: str = None) -> list[Tuple[float, str]]:
-    '''Searches for context relevant to query in article vector store. 
-    Use this Function to search for additional information before 
-    answering the user's question about an article. If article_title is
-    provided the search will only return results from that article. If
-    article_title is omitted, the search will include all articles
-    currently in the cache. 
+    '''Searches for context relevant to query. Use this Function to search 
+    for additional general information if needed before answering the user's question 
+    about an article. If article_title is provided the search will only return 
+    results from that article. If article_title is omitted, the search will 
+    include all articles currently in the cache. 
     
     Ags:
         query: user query to find context for
         article_title: optional, use this argument to search only for 
-        context from a specific context, defaults to None
+        context from a specific article, defaults to None
             
     Returns:
-        List of tuples with the following format: [(relevance score, 'context string')]
+        Text relevant to the query
     '''
 
     logger = logging.getLogger(__name__ + 'context_search')
@@ -122,25 +121,19 @@ def context_search(query: str, article_title: str = None) -> list[Tuple[float, s
 
     logger.info('Retrieved %s chunks for "%s"', len(results), query)
 
-    contexts = []
-
-    for result in results:
-        contexts.append((result.score, result.data))
-
-    return contexts
+    return results[0].data
 
 
 def find_article(query: str) -> list[Tuple[float, str]]:
     '''Uses vector search to find the most likely title of the article 
     referred to by query. Use this function if the user is asking about
-    and article, but it is unclear which article.
+    an article, but it is not clear what the exact title of the article is.
     
     Args:
-        query: query to to find source article for
+        query: query to to find source article tile for
         
     Returns:
-        List of tuples of most likely context article titles in the following format:
-        [(relevance score, 'article title')]
+        Article title
     '''
 
     logger = logging.getLogger(__name__ + 'context_search')
@@ -161,23 +154,17 @@ def find_article(query: str) -> list[Tuple[float, str]]:
 
     logger.info('Retrieved %s chunks for "%s"', len(results), query)
 
-    contexts = []
-
-    for result in results:
-        contexts.append((result.score, result.metadata['namespace']))
-
-    return contexts
+    return results[0].metadata['namespace']
 
 
 def get_summary(title: str) -> str:
-    '''Uses article title to get summary of article content.
+    '''Uses article title to retrieve summary of article content.
     
     Args:
-        title: title of article to get summary for
+        title: exact title of article
 
     Returns:
-        Short summary of article content. Returns "No summary found"
-        if summary does not exist.
+        Short summary of article content.
     '''
 
     logger = logging.getLogger(__name__ + '.get_summary()')
@@ -196,17 +183,17 @@ def get_summary(title: str) -> str:
         return summary
 
     logger.info('Could not find summary for: "%s"', title)
-    return 'No summary found'
+    return f'No article called "{title}". Make sure you have the correct title.'
 
 
 def get_link(title: str) -> str:
-    '''Uses article title to get link to content webpage.
+    '''Uses article title to look up direct link to article content webpage.
     
     Args:
-        title: title of article to get link for
+        title: exact title of article
 
     Returns:
-        Article webpage URL. Returns "No link found" if link does not exist.
+        Article webpage URL.
     '''
 
     logger = logging.getLogger(__name__ + '.get_link()')
@@ -225,4 +212,4 @@ def get_link(title: str) -> str:
         return link
 
     logger.info('Could not find link for: "%s"', title)
-    return 'No summary found'
+    return f'No article called "{title}". Make sure you have the correct title.'
