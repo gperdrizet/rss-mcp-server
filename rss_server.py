@@ -34,7 +34,7 @@ logging.basicConfig(
 # Get a logger
 logger = logging.getLogger(__name__)
 
-with gr.Blocks() as demo:
+with gr.Blocks(title='RASS server') as demo:
 
     # Page text
     gr.HTML(text.TITLE)
