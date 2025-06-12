@@ -4,8 +4,9 @@ sdk: gradio
 sdk_version: 5.32.1
 app_file: rss_server.py
 pinned: true
-tags:
-- mcp-server-track
+colorFrom: indigo
+colorTo: yellow
+short_description: MCP tools for RSS feeds
 ---
 
 # RSS MCP server
