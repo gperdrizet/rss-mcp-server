@@ -18,4 +18,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://gperdrizet:$HF_TOKEN@huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server main
+        run: git push https://gperdrizet:$HF_TOKEN@huggingface.co/spaces/gperdrizet/rss-mcp-server main

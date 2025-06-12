@@ -8,8 +8,8 @@ tags:
 - mcp-server-track
 ---
 
-# rss-mcp-server
+# RSS MCP server
 
 [![HuggingFace Space](https://github.com/gperdrizet/rss-mcp-server/actions/workflows/publish_hf_space.yml/badge.svg)](https://github.com/gperdrizet/rss-mcp-server/actions/workflows/publish_hf_space.yml)
 
-RSS feed reader Model Context Protocol server: try it on [HuggingFace Spaces](https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server)
+RSS feed reader Model Context Protocol server: try it on [HuggingFace Spaces](https://huggingface.co/spaces/gperdrizet/rss-mcp-server)
