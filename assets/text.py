@@ -16,7 +16,7 @@ DESCRIPTION = ('''
     
     This space is a MCP server which exposes custom tools to find and interact with
     RSS feed. See 
-    [Agentic RSS reader](https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-client) 
+    [Agentic RSS reader](https://huggingface.co/spaces/gperdrizet/rss-mcp-client) 
     for a demonstration of its use by an agent. Also, check out the 
     [main project repo on GitHub](https://github.com/gperdrizet/MCP-hackathon/tree/main).
     Both Spaces by [George Perdrizet](https://www.linkedin.com/in/gperdrizet)
